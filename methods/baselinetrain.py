@@ -1,11 +1,11 @@
 import backbone
 import utils
-
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import numpy as np
 import torch.nn.functional as F
+from loss.SoftTriple import SoftTriple
 
 class BaselineTrain(nn.Module):
     def __init__(self, model_func, num_class, loss_type = 'softmax', loss_w = [8, 2], loss_par = [20, 0.1, 0.2, 0.01, 10]):
