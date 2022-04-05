@@ -17,19 +17,23 @@ from methods.protonet import ProtoNet
 from methods.matchingnet import MatchingNet
 from methods.relationnet import RelationNet
 from methods.maml import MAML
-from io_utils import model_dict, parse_args, get_resume_file  
+from io_utils import model_dict, parse_args, get_resume_file
 
-def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch, params):    
+def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch, params):
     if optimization == 'Adam':
-        optimizer = torch.optim.Adam(model.parameters())
+        if params.dataset == 'CUB' and params.method == "baselineST" and (params.w1 * params.w2 != 0):
+            #if we are runing baselineST on CUB, the learning rate needs to be adjusted to avoid exploding gradient
+            optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+        else:
+            optimizer = torch.optim.Adam(model.parameters())
     else:
        raise ValueError('Unknown optimization, please define by yourself')
 
-    max_acc = 0       
+    max_acc = 0
 
     for epoch in range(start_epoch,stop_epoch):
         model.train()
-        model.train_loop(epoch, base_loader,  optimizer ) #model are called by reference, no need to return 
+        model.train_loop(epoch, base_loader,  optimizer ) #model are called by reference, no need to return
         model.eval()
 
         if not os.path.isdir(params.checkpoint_dir):
@@ -54,15 +58,15 @@ if __name__=='__main__':
 
 
     if params.dataset == 'cross':
-        base_file = configs.data_dir['miniImagenet'] + 'all.json' 
-        val_file   = configs.data_dir['CUB'] + 'val.json' 
+        base_file = configs.data_dir['miniImagenet'] + 'all.json'
+        val_file   = configs.data_dir['CUB'] + 'val.json'
     elif params.dataset == 'cross_char':
-        base_file = configs.data_dir['omniglot'] + 'noLatin.json' 
-        val_file   = configs.data_dir['emnist'] + 'val.json' 
+        base_file = configs.data_dir['omniglot'] + 'noLatin.json'
+        val_file   = configs.data_dir['emnist'] + 'val.json'
     else:
-        base_file = configs.data_dir[params.dataset] + 'base.json' 
-        val_file   = configs.data_dir[params.dataset] + 'val.json' 
-         
+        base_file = configs.data_dir[params.dataset] + 'base.json'
+        val_file   = configs.data_dir[params.dataset] + 'val.json'
+
     if 'Conv' in params.model:
         if params.dataset in ['omniglot', 'cross_char']:
             image_size = 28
@@ -77,7 +81,7 @@ if __name__=='__main__':
 
     optimization = 'Adam'
 
-    if params.stop_epoch == -1: 
+    if params.stop_epoch == -1:
         if params.method in ['baseline', 'baseline++'] :
             if params.dataset in ['omniglot', 'cross_char']:
                 params.stop_epoch = 5
@@ -94,14 +98,14 @@ if __name__=='__main__':
                 params.stop_epoch = 400
             else:
                 params.stop_epoch = 600 #default
-     
+
 
     if params.method in ['baseline', 'baseline++'] :
         base_datamgr    = SimpleDataManager(image_size, batch_size = 16)
         base_loader     = base_datamgr.get_data_loader( base_file , aug = params.train_aug )
         val_datamgr     = SimpleDataManager(image_size, batch_size = 64)
         val_loader      = val_datamgr.get_data_loader( val_file, aug = False)
-        
+
         if params.dataset == 'omniglot':
             assert params.num_classes >= 4112, 'class number need to be larger than max label id in base class'
         if params.dataset == 'cross_char':
@@ -111,29 +115,31 @@ if __name__=='__main__':
             model           = BaselineTrain( model_dict[params.model], params.num_classes)
         elif params.method == 'baseline++':
             model           = BaselineTrain( model_dict[params.model], params.num_classes, loss_type = 'dist')
+        elif params.method == 'baselineST':
+            model           = BaselineTrain( model_dict[params.model], params.num_classes, loss_type = 'st', loss_w = [params.w1, params.w2], loss_par = [params.la, params.gamma, params.tau, params.margin, params.K])
 
     elif params.method in ['protonet','matchingnet','relationnet', 'relationnet_softmax', 'maml', 'maml_approx']:
         n_query = max(1, int(16* params.test_n_way/params.train_n_way)) #if test_n_way is smaller than train_n_way, reduce n_query to keep batch size small
- 
-        train_few_shot_params    = dict(n_way = params.train_n_way, n_support = params.n_shot) 
+
+        train_few_shot_params    = dict(n_way = params.train_n_way, n_support = params.n_shot)
         base_datamgr            = SetDataManager(image_size, n_query = n_query,  **train_few_shot_params)
         base_loader             = base_datamgr.get_data_loader( base_file , aug = params.train_aug )
-         
-        test_few_shot_params     = dict(n_way = params.test_n_way, n_support = params.n_shot) 
+
+        test_few_shot_params     = dict(n_way = params.test_n_way, n_support = params.n_shot)
         val_datamgr             = SetDataManager(image_size, n_query = n_query, **test_few_shot_params)
-        val_loader              = val_datamgr.get_data_loader( val_file, aug = False) 
-        #a batch for SetDataManager: a [n_way, n_support + n_query, dim, w, h] tensor        
+        val_loader              = val_datamgr.get_data_loader( val_file, aug = False)
+        #a batch for SetDataManager: a [n_way, n_support + n_query, dim, w, h] tensor
 
         if params.method == 'protonet':
             model           = ProtoNet( model_dict[params.model], **train_few_shot_params )
         elif params.method == 'matchingnet':
             model           = MatchingNet( model_dict[params.model], **train_few_shot_params )
         elif params.method in ['relationnet', 'relationnet_softmax']:
-            if params.model == 'Conv4': 
+            if params.model == 'Conv4':
                 feature_model = backbone.Conv4NP
-            elif params.model == 'Conv6': 
+            elif params.model == 'Conv6':
                 feature_model = backbone.Conv6NP
-            elif params.model == 'Conv4S': 
+            elif params.model == 'Conv4S':
                 feature_model = backbone.Conv4SNP
             else:
                 feature_model = lambda: model_dict[params.model]( flatten = False )
@@ -158,7 +164,7 @@ if __name__=='__main__':
     params.checkpoint_dir = '%s/checkpoints/%s/%s_%s' %(configs.save_dir, params.dataset, params.model, params.method)
     if params.train_aug:
         params.checkpoint_dir += '_aug'
-    if not params.method  in ['baseline', 'baseline++']: 
+    if not params.method  in ['baseline', 'baseline++']:
         params.checkpoint_dir += '_%dway_%dshot' %( params.train_n_way, params.n_shot)
 
     if not os.path.isdir(params.checkpoint_dir):
@@ -167,7 +173,7 @@ if __name__=='__main__':
     start_epoch = params.start_epoch
     stop_epoch = params.stop_epoch
     if params.method == 'maml' or params.method == 'maml_approx' :
-        stop_epoch = params.stop_epoch * model.n_task #maml use multiple tasks in one update 
+        stop_epoch = params.stop_epoch * model.n_task #maml use multiple tasks in one update
 
     if params.resume:
         resume_file = get_resume_file(params.checkpoint_dir)
@@ -181,12 +187,12 @@ if __name__=='__main__':
             baseline_checkpoint_dir += '_aug'
         warmup_resume_file = get_resume_file(baseline_checkpoint_dir)
         tmp = torch.load(warmup_resume_file)
-        if tmp is not None: 
+        if tmp is not None:
             state = tmp['state']
             state_keys = list(state.keys())
             for i, key in enumerate(state_keys):
                 if "feature." in key:
-                    newkey = key.replace("feature.","")  # an architecture model has attribute 'feature', load architecture feature to backbone by casting name from 'feature.trunk.xx' to 'trunk.xx'  
+                    newkey = key.replace("feature.","")  # an architecture model has attribute 'feature', load architecture feature to backbone by casting name from 'feature.trunk.xx' to 'trunk.xx'
                     state[newkey] = state.pop(key)
                 else:
                     state.pop(key)
