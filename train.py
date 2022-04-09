@@ -11,7 +11,8 @@ import configs
 import backbone
 from data.datamgr import SimpleDataManager, SetDataManager
 from methods.baselinetrain import BaselineTrain
-from methods.baselinefinetune import BaselineFinetune
+from methods.baselinetrain_stplus import BaselineTrainSoft
+from methods.baselinefinetune import BaselineFinetune, BaselineFinetune_soft
 from methods.protonet import ProtoNet
 from methods.matchingnet import MatchingNet
 from methods.relationnet import RelationNet
@@ -23,6 +24,9 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
         if params.dataset == 'CUB' and params.method == "baselineST" and (params.w1 * params.w2 != 0):
             #if we are runing baselineST on CUB, the learning rate needs to be adjusted to avoid exploding gradient
             optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+        elif params.method == "baselineST+":
+            optimizer = torch.optim.Adam([{"params": model.feature.parameters(), "lr": params.modellr},
+                                      {"params": model.fc, "lr": params.centerlr}])
         else:
             optimizer = torch.optim.Adam(model.parameters())
     else:
@@ -81,11 +85,14 @@ if __name__=='__main__':
     optimization = 'Adam'
 
     if params.stop_epoch == -1:
-        if params.method in ['baseline', 'baseline++'] :
+        if params.method in ['baseline', 'baseline++', 'baselineST', 'baselineST+'] :
             if params.dataset in ['omniglot', 'cross_char']:
                 params.stop_epoch = 5
             elif params.dataset in ['CUB']:
-                params.stop_epoch = 200 # This is different as stated in the open-review paper. However, using 400 epoch in baseline actually lead to over-fitting
+                if params.method == "baselineST":
+                    params.stop_epoch = 1000
+                else:
+                    params.stop_epoch = 200 # This is different as stated in the open-review paper. However, using 400 epoch in baseline actually lead to over-fitting
             elif params.dataset in ['miniImagenet', 'cross']:
                 params.stop_epoch = 400
             else:
@@ -99,7 +106,7 @@ if __name__=='__main__':
                 params.stop_epoch = 600 #default
 
 
-    if params.method in ['baseline', 'baseline++'] :
+    if params.method in ['baseline', 'baseline++', 'baselineST', 'baselineST+'] :
         base_datamgr    = SimpleDataManager(image_size, batch_size = 16)
         base_loader     = base_datamgr.get_data_loader( base_file , aug = params.train_aug )
         val_datamgr     = SimpleDataManager(image_size, batch_size = 64)
@@ -116,6 +123,8 @@ if __name__=='__main__':
             model           = BaselineTrain( model_dict[params.model], params.num_classes, loss_type = 'dist')
         elif params.method == 'baselineST':
             model           = BaselineTrain( model_dict[params.model], params.num_classes, loss_type = 'st', loss_w = [params.w1, params.w2], loss_par = [params.la, params.gamma, params.tau, params.margin, params.K])
+        elif params.method =='baselineST+':
+            model           = BaselineTrainSoft( model_dict[params.model], la = params.la, gamma = params.gamma, tau=params.tau, margin=params.margin, K=params.K, cN=params.num_classes)
 
     elif params.method in ['protonet','matchingnet','relationnet', 'relationnet_softmax', 'maml', 'maml_approx']:
         n_query = max(1, int(16* params.test_n_way/params.train_n_way)) #if test_n_way is smaller than train_n_way, reduce n_query to keep batch size small
@@ -163,7 +172,7 @@ if __name__=='__main__':
     params.checkpoint_dir = '%s/checkpoints/%s/%s_%s' %(configs.save_dir, params.dataset, params.model, params.method)
     if params.train_aug:
         params.checkpoint_dir += '_aug'
-    if not params.method  in ['baseline', 'baseline++']:
+    if not params.method  in ['baseline', 'baseline++', 'baselineST', 'baselineST+']:
         params.checkpoint_dir += '_%dway_%dshot' %( params.train_n_way, params.n_shot)
 
     if not os.path.isdir(params.checkpoint_dir):
