@@ -120,7 +120,7 @@ https://github.com/dragen1860/MAML-Pytorch
 https://github.com/katerakelly/pytorch-maml
 
 ## FAQ
-(For this FAQ, please refer to issues from Chen et al's original github repo (https://github.com/wyharveychen/CloserLookFewShot).)
+For this FAQ, please refer to issues from Chen et al's original github repo (https://github.com/wyharveychen/CloserLookFewShot).
 
 * Q1 Why some of my reproduced results for CUB dataset are around 4~5% different with you reported result? (#31, #34, #42)
 * A1 My reported results on the paper may run in different epochs or episodes, please see each issue for details.
