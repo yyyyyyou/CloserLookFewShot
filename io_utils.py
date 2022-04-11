@@ -30,7 +30,7 @@ def parse_args(script):
     parser.add_argument('--gamma'       , default=0.1,  type=float, help='gamma value for SoftTriple loss')
     parser.add_argument('--tau'         , default=0.2,  type=float, help='tau value for SoftTriple loss')
     parser.add_argument('--margin'      , default=0.01, type=float, help='margin value for SoftTriple loss')
-    parser.add_argument('--K'           , default=10,   type=10,    help='number of centroids for each class for SoftTriple loss calculation')
+    parser.add_argument('--K'           , default=10,   type=int,    help='number of centroids for each class for SoftTriple loss calculation')
     parser.add_argument('--modellr'     , default=0.0001, type=float, help='model learning rate for SoftTriple')
     parser.add_argument('--centerlr'    , default=0.01, type=float, help='center learning rate for SoftTriple')
 
