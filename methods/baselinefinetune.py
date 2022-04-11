@@ -59,7 +59,6 @@ class BaselineFinetune_soft(MetaTemplate):
         super(BaselineFinetune_soft, self).__init__(model_func, n_way, n_support)
         self.k = 2
         self.gamma = 0.2
-        self.la = 20
         self.fc = Parameter(torch.Tensor(self.feat_dim, self.n_way * self.k))
         self.weight = torch.zeros(self.n_way * self.k, self.n_way * self.k, dtype=torch.bool).cuda()
         for i in range(0, self.n_way):
@@ -80,7 +79,7 @@ class BaselineFinetune_soft(MetaTemplate):
         y_support = torch.from_numpy(np.repeat(range(self.n_way), self.n_support))
         y_support = Variable(y_support.cuda())
 
-        set_optimizer = torch.optim.Adam([{'params':self.fc,'lr':0.02}],  eps=0.01, weight_decay=0.0001)
+        set_optimizer = torch.optim.Adam([{'params':self.fc,'lr':0.01}],  eps=0.01, weight_decay=0.0001)
 
         loss_function = nn.CrossEntropyLoss()
         loss_function = loss_function.cuda()

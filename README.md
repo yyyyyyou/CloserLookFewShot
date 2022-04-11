@@ -1,3 +1,37 @@
+# Update only for CS680 course University of Waterloo
+Please see change_log.ipynb
+
+Author:
+Zhen Gong 20673670
+Yuzhe You 20926068
+
+
+Citation of resources:
+```
+@inproceedings{
+chen2019closerfewshot,
+title={A Closer Look at Few-shot Classification},
+author={Chen, Wei-Yu and Liu, Yen-Cheng and Kira, Zsolt and Wang, Yu-Chiang and  Huang, Jia-Bin},
+booktitle={International Conference on Learning Representations},
+year={2019}
+}
+
+@inproceedings{qian2019striple,
+  author    = {Qi Qian and
+               Lei Shang and
+               Baigui Sun and
+               Juhua Hu and
+               Hao Li and
+               Rong Jin},
+  title     = {SoftTriple Loss: Deep Metric Learning Without Triplet Sampling},
+  booktitle = {{IEEE} International Conference on Computer Vision, {ICCV} 2019},
+  year      = {2019}
+}
+```
+
+
+
+
 # A Closer Look at Few-shot Classification
 
 This repo contains the reference source code for the paper [A Closer Look at Few-shot Classification](https://arxiv.org/abs/1904.04232) in International Conference on Learning Representations (ICLR 2019). In this project, we provide a integrated testbed for a detailed empirical study for few-shot classification.
