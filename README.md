@@ -1,10 +1,13 @@
-# Update only for CS680 course University of Waterloo
-Please see change_log.ipynb
 
-Author:
-Zhen Gong 20673670
-Yuzhe You 20926068
+Few-shot Classification with SoftTriple Loss
 
+Authors:
+Yuzhe You, Zhen Gong
+
+In this study, we investigate the feasibility of combining the SoftTriple loss (Qian et al., 2019) into the general structure of Baseline++ model proprosed in (Chen et al., 2019). We denote our models as BaselineST and BaselineST+.
+
+The BaselineST model trains a feature extractor and a Baseline++ classifier with
+a hybrid loss function that combines the standard cross-entropy loss and the SoftTriple loss, while the BaselineST+ model utilizes only the SoftTriple loss for both the training and fine-tuning stage.
 
 Citation of resources:
 ```
@@ -30,15 +33,13 @@ year={2019}
 ```
 
 
-
-
 # A Closer Look at Few-shot Classification
 
-This repo contains the reference source code for the paper [A Closer Look at Few-shot Classification](https://arxiv.org/abs/1904.04232) in International Conference on Learning Representations (ICLR 2019). In this project, we provide a integrated testbed for a detailed empirical study for few-shot classification.
+This repo contains the reference source code for the paper [A Closer Look at Few-shot Classification](https://arxiv.org/abs/1904.04232) in International Conference on Learning Representations (ICLR 2019). In this project, Chen et al provide a integrated testbed for a detailed empirical study for few-shot classification.
 
 
 ## Citation
-If you find our code useful, please consider citing our work using the bibtex:
+If you find Chen et al's code useful, please consider citing their work using the bibtex:
 ```
 @inproceedings{
 chen2019closerfewshot,
@@ -61,16 +62,16 @@ year={2019}
 
 ### mini-ImageNet
 * Change directory to `./filelists/miniImagenet`
-* run `source ./download_miniImagenet.sh` 
+* run `source ./download_miniImagenet.sh`
 
-(WARNING: This would download the 155G ImageNet dataset. You can comment out correponded line 5-6 in `download_miniImagenet.sh` if you already have one.) 
+(WARNING: This would download the 155G ImageNet dataset. You can comment out correponded line 5-6 in `download_miniImagenet.sh` if you already have one.)
 
 ### mini-ImageNet->CUB (cross)
 * Finish preparation for CUB and mini-ImageNet and you are done!
 
 ### Omniglot
 * Change directory to `./filelists/omniglot`
-* run `source ./download_omniglot.sh` 
+* run `source ./download_omniglot.sh`
 
 ### Omniglot->EMNIST (cross_char)
 * Finish preparation for omniglot first
@@ -105,10 +106,10 @@ Run
 * For all the pre-computed results, please see `./record/few_shot_exp_figures.xlsx`. This will be helpful for including your own results for a fair comparison.
 
 ## References
-Our testbed builds upon several existing publicly available code. Specifically, we have modified and integrated the following code into this project:
+Chen et al's testbed builds upon several existing publicly available code. Specifically, they have modified and integrated the following code into this project:
 
 * Framework, Backbone, Method: Matching Network
-https://github.com/facebookresearch/low-shot-shrink-hallucinate 
+https://github.com/facebookresearch/low-shot-shrink-hallucinate
 * Omniglot dataset, Method: Prototypical Network
 https://github.com/jakesnell/prototypical-networks
 * Method: Relational Network
@@ -119,14 +120,16 @@ https://github.com/dragen1860/MAML-Pytorch
 https://github.com/katerakelly/pytorch-maml
 
 ## FAQ
-* Q1 Why some of my reproduced results for CUB dataset are around 4~5% with you reported result? (#31, #34, #42)
-* A1 Sorry about my reported the results on the paper may run in different epochs or episodes, please see each issue for details.
+(Please refer to issues from Chen et al's original github repo)
+
+* Q1 Why some of my reproduced results for CUB dataset are around 4~5% different with you reported result? (#31, #34, #42)
+* A1 My reported results on the paper may run in different epochs or episodes, please see each issue for details.
 
 * Q2 Why some of my reproduced results for mini-ImageNet dataset are around 1~2% different with your reported results? (#17, #40, #41 #43)
 * A2 Due to random initialization, each training process could lead to different accuracy. Also, each test time could lead to different accuracy.
 
 * Q3 How do you decided the mean and the standard variation for dataset normalization? (#18, #39)
-* A3 I use the mean and standard variation from ImageNet, but you can use the ones calculated from your own dataset. 
+* A3 I use the mean and standard variation from ImageNet, but you can use the ones calculated from your own dataset.
 
 * Q4 Do you have the mini-ImageNet dataset available without downloading the whole ImageNet? (#45 #29)
 * A4 You can use the dataset here https://github.com/oscarknagg/few-shot, but you will need to modify filelists/miniImagenet/write_miniImagenet_filelist.py.
