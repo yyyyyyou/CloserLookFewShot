@@ -4,6 +4,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 import numpy as np
 import torch.nn.functional as F
+from torch.nn.parameter import Parameter
 from methods.meta_template import MetaTemplate
 
 class BaselineFinetune(MetaTemplate):
