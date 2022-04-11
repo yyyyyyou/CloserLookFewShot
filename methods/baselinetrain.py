@@ -32,7 +32,7 @@ class BaselineTrain(nn.Module):
     def forward_loss(self, x, y):
         out, scores = self.forward(x)
         y = Variable(y.cuda())
-        if self.loss_type == 'softmax' or loss_type == 'dist' or self.loss_w[1] == 0:
+        if self.loss_type == 'softmax' or self.loss_type == 'dist' or self.loss_w[1] == 0:
             loss = self.loss_fn_1(scores, y)
         elif self.loss_w[0] == 0: #minimizes only softtriple loss
             loss = self.loss_fn_2(out, y)
