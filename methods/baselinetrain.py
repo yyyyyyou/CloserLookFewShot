@@ -38,7 +38,7 @@ class BaselineTrain(nn.Module):
             loss = self.loss_fn_2(out, y)
         elif self.loss_type == 'st':
             loss = (self.loss_w[0] * self.loss_fn_1(scores, y) + self.loss_w[1] * self.loss_fn_2(out, y ))/10.0
-        return self.loss_fn_1(scores, y )
+        return loss
 
     def train_loop(self, epoch, train_loader, optimizer):
         print_freq = 10
