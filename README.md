@@ -9,7 +9,7 @@ In this study, we investigate the feasibility of combining the SoftTriple loss (
 The BaselineST model trains a feature extractor and a Baseline++ classifier with
 a hybrid loss function that combines the standard cross-entropy loss and the SoftTriple loss, while the BaselineST+ model utilizes only the SoftTriple loss for both the training and fine-tuning stage.
 
-Citation of resources:
+## Citation of used resources:
 ```
 @inproceedings{
 chen2019closerfewshot,
@@ -32,7 +32,6 @@ year={2019}
 }
 ```
 
-
 # A Closer Look at Few-shot Classification
 
 This repo contains the reference source code for the paper [A Closer Look at Few-shot Classification](https://arxiv.org/abs/1904.04232) in International Conference on Learning Representations (ICLR 2019). In this project, Chen et al provide a integrated testbed for a detailed empirical study for few-shot classification.
@@ -50,7 +49,7 @@ year={2019}
 }
 ```
 
-## Enviroment
+## Environment
  - Python3
  - [Pytorch](http://pytorch.org/) before 0.4 (for newer vesion, please see issue #3 )
  - json
