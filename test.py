@@ -97,12 +97,12 @@ if __name__ == '__main__':
     checkpoint_dir = '%s/checkpoints/%s/%s_%s' %(configs.save_dir, params.dataset, params.model, params.method)
     if params.train_aug:
         checkpoint_dir += '_aug'
-    if not params.method in ['baseline', 'baseline++'] :
+    if not params.method in ['baseline', 'baseline++', 'baselineST', 'baselineST+'] :
         checkpoint_dir += '_%dway_%dshot' %( params.train_n_way, params.n_shot)
 
     #modelfile   = get_resume_file(checkpoint_dir)
 
-    if not params.method in ['baseline', 'baseline++'] :
+    if not params.method in ['baseline', 'baseline++', 'baselineST', 'baselineST+'] :
         if params.save_iter != -1:
             modelfile   = get_assigned_file(checkpoint_dir,params.save_iter)
         else:
