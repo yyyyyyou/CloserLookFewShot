@@ -1,5 +1,5 @@
 
-Few-shot Classification with SoftTriple Loss
+# Few-shot Classification with SoftTriple Loss
 
 Authors:
 Yuzhe You, Zhen Gong
@@ -120,7 +120,7 @@ https://github.com/dragen1860/MAML-Pytorch
 https://github.com/katerakelly/pytorch-maml
 
 ## FAQ
-(Please refer to issues from Chen et al's original github repo)
+(For this FAQ, please refer to issues from Chen et al's original github repo (https://github.com/wyharveychen/CloserLookFewShot).)
 
 * Q1 Why some of my reproduced results for CUB dataset are around 4~5% different with you reported result? (#31, #34, #42)
 * A1 My reported results on the paper may run in different epochs or episodes, please see each issue for details.
