@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch.nn.parameter import Parameter
 from torch.nn import init
 from methods.meta_template import MetaTemplate
-
+import math
 
 class BaselineFinetune(MetaTemplate):
     def __init__(self, model_func,  n_way, n_support, loss_type = "softmax"):
