@@ -24,8 +24,8 @@ def parse_args(script):
     parser.add_argument('--n_shot'      , default=5, type=int,  help='number of labeled data in each class, same as n_support') #baseline and baseline++ only use this parameter in finetuning
     parser.add_argument('--train_aug'   , action='store_true',  help='perform data augmentation or not during training ') #still required for save_features.py and test.py to find the model path correctly
     #all arguments needed for baselineST
-    parser.add_argument('--w1'          , default=8,    type=float, help='weight applied to cross-entropy loss if use BaselineST')
-    parser.add_argument('--w2'          , default=2,    type=float, help='weight applied to SoftTriple loss if used BaselineST')
+    parser.add_argument('--w1'          , default=8,    type=float, help='weight applied to cross-entropy loss if use BaselineST (out of 10, w1+w2 should equal 10)')
+    parser.add_argument('--w2'          , default=2,    type=float, help='weight applied to SoftTriple loss if used BaselineST (out of 10, w1+w2 should equal 10)')
     parser.add_argument('--la'          , default=20,   type=float, help='lambda value for SoftTriple loss')
     parser.add_argument('--gamma'       , default=0.1,  type=float, help='gamma value for SoftTriple loss')
     parser.add_argument('--tau'         , default=0.2,  type=float, help='tau value for SoftTriple loss')
