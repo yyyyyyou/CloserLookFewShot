@@ -15,7 +15,8 @@ import backbone
 import data.feature_loader as feat_loader
 from data.datamgr import SetDataManager
 from methods.baselinetrain import BaselineTrain
-from methods.baselinefinetune import BaselineFinetune
+from methods.baselinetrain_stplus import BaselineTrainSoft
+from methods.baselinefinetune import BaselineFinetune, BaselineFinetune_soft
 from methods.protonet import ProtoNet
 from methods.matchingnet import MatchingNet
 from methods.relationnet import RelationNet
@@ -33,7 +34,7 @@ def feature_evaluation(cl_data_file, model, n_way = 5, n_support = 5, n_query = 
         z_all.append( [ np.squeeze( img_feat[perm_ids[i]]) for i in range(n_support+n_query) ] )     # stack each batch
 
     z_all = torch.from_numpy(np.array(z_all) )
-   
+
     model.n_query = n_query
     if adaptation:
         scores  = model.set_forward_adaptation(z_all, is_feature = True)
@@ -41,7 +42,7 @@ def feature_evaluation(cl_data_file, model, n_way = 5, n_support = 5, n_query = 
         scores  = model.set_forward(z_all, is_feature = True)
     pred = scores.data.cpu().numpy().argmax(axis = 1)
     y = np.repeat(range( n_way ), n_query )
-    acc = np.mean(pred == y)*100 
+    acc = np.mean(pred == y)*100
     return acc
 
 if __name__ == '__main__':
@@ -51,7 +52,7 @@ if __name__ == '__main__':
 
     iter_num = 600
 
-    few_shot_params = dict(n_way = params.test_n_way , n_support = params.n_shot) 
+    few_shot_params = dict(n_way = params.test_n_way , n_support = params.n_shot)
 
     if params.dataset in ['omniglot', 'cross_char']:
         assert params.model == 'Conv4' and not params.train_aug ,'omniglot only support Conv4 without augmentation'
@@ -59,18 +60,20 @@ if __name__ == '__main__':
 
     if params.method == 'baseline':
         model           = BaselineFinetune( model_dict[params.model], **few_shot_params )
-    elif params.method == 'baseline++':
+    elif params.method in ['baseline++', 'baselineST']:
         model           = BaselineFinetune( model_dict[params.model], loss_type = 'dist', **few_shot_params )
+    elif params.method == 'baselineST+':
+        model           = BaselineFinetune_soft( model_dict[params.model], **few_shot_params)
     elif params.method == 'protonet':
         model           = ProtoNet( model_dict[params.model], **few_shot_params )
     elif params.method == 'matchingnet':
         model           = MatchingNet( model_dict[params.model], **few_shot_params )
     elif params.method in ['relationnet', 'relationnet_softmax']:
-        if params.model == 'Conv4': 
+        if params.model == 'Conv4':
             feature_model = backbone.Conv4NP
-        elif params.model == 'Conv6': 
+        elif params.model == 'Conv6':
             feature_model = backbone.Conv6NP
-        elif params.model == 'Conv4S': 
+        elif params.model == 'Conv4S':
             feature_model = backbone.Conv4SNP
         else:
             feature_model = lambda: model_dict[params.model]( flatten = False )
@@ -94,12 +97,12 @@ if __name__ == '__main__':
     checkpoint_dir = '%s/checkpoints/%s/%s_%s' %(configs.save_dir, params.dataset, params.model, params.method)
     if params.train_aug:
         checkpoint_dir += '_aug'
-    if not params.method in ['baseline', 'baseline++'] :
+    if not params.method in ['baseline', 'baseline++', 'baselineST', 'baselineST+'] :
         checkpoint_dir += '_%dway_%dshot' %( params.train_n_way, params.n_shot)
 
     #modelfile   = get_resume_file(checkpoint_dir)
 
-    if not params.method in ['baseline', 'baseline++'] : 
+    if not params.method in ['baseline', 'baseline++', 'baselineST', 'baselineST+'] :
         if params.save_iter != -1:
             modelfile   = get_assigned_file(checkpoint_dir,params.save_iter)
         else:
@@ -118,23 +121,23 @@ if __name__ == '__main__':
             if params.dataset in ['omniglot', 'cross_char']:
                 image_size = 28
             else:
-                image_size = 84 
+                image_size = 84
         else:
             image_size = 224
 
         datamgr         = SetDataManager(image_size, n_eposide = iter_num, n_query = 15 , **few_shot_params)
-        
+
         if params.dataset == 'cross':
             if split == 'base':
-                loadfile = configs.data_dir['miniImagenet'] + 'all.json' 
+                loadfile = configs.data_dir['miniImagenet'] + 'all.json'
             else:
                 loadfile   = configs.data_dir['CUB'] + split +'.json'
         elif params.dataset == 'cross_char':
             if split == 'base':
-                loadfile = configs.data_dir['omniglot'] + 'noLatin.json' 
+                loadfile = configs.data_dir['omniglot'] + 'noLatin.json'
             else:
-                loadfile  = configs.data_dir['emnist'] + split +'.json' 
-        else: 
+                loadfile  = configs.data_dir['emnist'] + split +'.json'
+        else:
             loadfile    = configs.data_dir[params.dataset] + split + '.json'
 
         novel_loader     = datamgr.get_data_loader( loadfile, aug = False)
@@ -156,7 +159,7 @@ if __name__ == '__main__':
         acc_std  = np.std(acc_all)
         print('%d Test Acc = %4.2f%% +- %4.2f%%' %(iter_num, acc_mean, 1.96* acc_std/np.sqrt(iter_num)))
     with open('./record/results.txt' , 'a') as f:
-        timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime()) 
+        timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime())
         aug_str = '-aug' if params.train_aug else ''
         aug_str += '-adapted' if params.adaptation else ''
         if params.method in ['baseline', 'baseline++'] :

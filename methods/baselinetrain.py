@@ -1,37 +1,45 @@
 import backbone
 import utils
-
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import numpy as np
 import torch.nn.functional as F
+from loss.SoftTriple import SoftTriple
 
 class BaselineTrain(nn.Module):
-    def __init__(self, model_func, num_class, loss_type = 'softmax'):
+    def __init__(self, model_func, num_class, loss_type = 'softmax', loss_w = [8, 2], loss_par = [20, 0.1, 0.2, 0.01, 10]):
         super(BaselineTrain, self).__init__()
         self.feature    = model_func()
         if loss_type == 'softmax':
             self.classifier = nn.Linear(self.feature.final_feat_dim, num_class)
             self.classifier.bias.data.fill_(0)
-        elif loss_type == 'dist': #Baseline ++
+        elif loss_type == 'dist' or loss_type == 'st': #Baseline ++
             self.classifier = backbone.distLinear(self.feature.final_feat_dim, num_class)
-        self.loss_type = loss_type  #'softmax' #'dist'
+        self.loss_type = loss_type  #'softmax' #'dist' #'st'
         self.num_class = num_class
-        self.loss_fn = nn.CrossEntropyLoss()
+        self.loss_fn_1 = nn.CrossEntropyLoss()
+        self.loss_fn_2 = SoftTriple(loss_par[0], loss_par[1], loss_par[2], loss_par[3], self.feature.final_feat_dim, num_class, loss_par[4]).cuda()
+        self.loss_w = loss_w
         self.DBval = False; #only set True for CUB dataset, see issue #31
 
     def forward(self,x):
         x    = Variable(x.cuda())
         out  = self.feature.forward(x)
         scores  = self.classifier.forward(out)
-        return scores
+        return out, scores #return both embedding and scores
 
     def forward_loss(self, x, y):
-        scores = self.forward(x)
+        out, scores = self.forward(x)
         y = Variable(y.cuda())
-        return self.loss_fn(scores, y )
-    
+        if self.loss_type == 'softmax' or self.loss_type == 'dist' or self.loss_w[1] == 0:
+            loss = self.loss_fn_1(scores, y)
+        elif self.loss_w[0] == 0: #minimizes only softtriple loss
+            loss = self.loss_fn_2(out, y)
+        elif self.loss_type == 'st':
+            loss = (self.loss_w[0] * self.loss_fn_1(scores, y) + self.loss_w[1] * self.loss_fn_2(out, y ))/10.0
+        return loss
+
     def train_loop(self, epoch, train_loader, optimizer):
         print_freq = 10
         avg_loss=0
@@ -47,7 +55,7 @@ class BaselineTrain(nn.Module):
             if i % print_freq==0:
                 #print(optimizer.state_dict()['param_groups'][0]['lr'])
                 print('Epoch {:d} | Batch {:d}/{:d} | Loss {:f}'.format(epoch, i, len(train_loader), avg_loss/float(i+1)  ))
-                     
+
     def test_loop(self, val_loader):
         if self.DBval:
             return self.analysis_loop(val_loader)
@@ -65,10 +73,10 @@ class BaselineTrain(nn.Module):
                 if l not in class_file.keys():
                     class_file[l] = []
                 class_file[l].append(f)
-       
+
         for cl in class_file:
             class_file[cl] = np.array(class_file[cl])
-        
+
         DB = DBindex(class_file)
         print('DB index = %4.2f' %(DB))
         return 1/DB #DB index: the lower the better
@@ -91,8 +99,7 @@ def DBindex(cl_data_file):
     mu_i = np.tile( np.expand_dims( np.array(cl_means), axis = 0), (len(class_list),1,1) )
     mu_j = np.transpose(mu_i,(1,0,2))
     mdists = np.sqrt(np.sum(np.square(mu_i - mu_j), axis = 2))
-    
+
     for i in range(cl_num):
         DBs.append( np.max([ (stds[i]+ stds[j])/mdists[i,j]  for j in range(cl_num) if j != i ]) )
     return np.mean(DBs)
-
