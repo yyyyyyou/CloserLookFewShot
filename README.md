@@ -9,6 +9,10 @@ In this study, we investigate the feasibility of combining the SoftTriple loss (
 The BaselineST model trains a feature extractor and a Baseline++ classifier with
 a hybrid loss function that combines the standard cross-entropy loss and the SoftTriple loss, while the BaselineST+ model utilizes only the SoftTriple loss for both the training and fine-tuning stage.
 
+## Run
+
+To train the BaselineST model, use `--method baselineST`. To train the BaselineST+ model, use `--method baselineST+`.
+
 ## Citation of used resources:
 ```
 @inproceedings{
